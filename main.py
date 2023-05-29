@@ -24,16 +24,19 @@ def search(query):
     output = json.loads(r.text)
     data = {}
 
+    # Add info from market to data dict
     for product in output['Products']:
         for key, value in product['market'].items():
             if key not in data:
                 data[key] = []
             data[key].append(value)
 
+    # Add rest of info to data dict
     for product in output['Products']:
-        product.pop('market')
-
-    for product in output['Products']:
+        # Pop used dict
+        if product['market']:
+            product.pop('market')
+        
         for key, value in product.items():
             if key not in data:
                 data[key] = []
