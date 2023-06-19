@@ -1,14 +1,16 @@
-# NIKE API CALL
-import requests
 import json
 from time import sleep
+import requests
 
-def callAPI(url):
+
+def call_API(url):
+    # NIKE API CALL
     html = requests.get(url=url, timeout=3)
     output = json.loads(html.text)
     return output
 
-def loopShoes(output):
+
+def loop_shoes(output):
     shoes = {}
     for item in output['data']['products']['products']:
         if item['inStock'] is True and item['productType'] == 'FOOTWEAR':
@@ -18,6 +20,7 @@ def loopShoes(output):
             print(shoeId, title, item['price']['currentPrice'], shoeLink)
             shoes[shoeId] = title, item['price']['currentPrice'], shoeLink
     return shoes
+
 
 def main():
     res = {}
@@ -38,8 +41,8 @@ def main():
         print('---------- PAGE NUMBER:', i + 1, '----------')
         url = f'https://api.nike.com/cic/browse/v2?queryid=products&anonymousId=241B0FAA1AC3D3CB734EA4B24C8C910D&country={country}&endpoint=%2Fproduct_feed%2Frollup_threads%2Fv2%3Ffilter%3Dmarketplace({country})%26filter%3Dlanguage({country_language})%26filter%3DemployeePrice(true)%26searchTerms%3D{query}%26anchor%3D{anchor}%26consumerChannelId%3Dd9a5bc42-4b9c-4976-858a-f159cf99c647%26count%3D{count}&language={country_language}&localizedRangeStr=%7BlowestPrice%7D%E2%80%94%7BhighestPrice%7D'
         sleep(2)
-        output = callAPI(url)
-        res.update(loopShoes(output))
+        output = call_API(url)
+        res.update(loop_shoes(output))
         anchor += count
         sleep(3)
 
@@ -53,3 +56,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
