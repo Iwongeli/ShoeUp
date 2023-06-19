@@ -30,6 +30,7 @@ def total_records(query, page, resultsPerPage):
     
 def search(query, page, resultsPerPage):
     url = f"https://stockx.com/api/browse?_search={query}&page={page}&resultsPerPage={resultsPerPage}"
+    print(url)
 
     headers = {
         "accept": "application/json",
@@ -114,7 +115,7 @@ def main():
     
     for i in range(1, pages): 
         print('PROCESSING PAGE NR:', i)
-        df = search(query, page, resultsPerPage)
+        df = search(query, i, resultsPerPage)
         dfs.append(df)
         sleep(5)
 
