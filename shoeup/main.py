@@ -1,9 +1,11 @@
 import json
+from time import sleep
 import pandas as pd
 import requests
-from time import sleep
+
 
 USD_PLN = 4.08
+
 
 def total_records(query, page, resultsPerPage):
     url = f"https://stockx.com/api/browse?_search={query}&page={page}&resultsPerPage={resultsPerPage}"
@@ -28,6 +30,7 @@ def total_records(query, page, resultsPerPage):
     total_pages = output['Pagination']['total']
     return total_pages
     
+
 def search(query, page, resultsPerPage):
     url = f"https://stockx.com/api/browse?_search={query}&page={page}&resultsPerPage={resultsPerPage}"
     print(url)
@@ -110,10 +113,9 @@ def main():
     dfs = []
     pages = int(total_records(query, page, resultsPerPage) / resultsPerPage) - 1
     print('QUERY:', query, '\nRESULTS PER PAGE:', resultsPerPage, '\nTOTAL PAGES:', pages)
-    pages = 3
     sleep(5)
-    
-    for i in range(1, pages): 
+
+    for i in range(1, 5):
         print('PROCESSING PAGE NR:', i)
         df = search(query, i, resultsPerPage)
         dfs.append(df)
