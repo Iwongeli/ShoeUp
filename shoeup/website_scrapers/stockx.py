@@ -1,6 +1,9 @@
+import logging
+
 import pandas as pd
-from website_scrapers._base import BaseScraper
 import requests
+
+from website_scrapers._base import BaseScraper
 
 
 class StockX(BaseScraper):
@@ -20,6 +23,8 @@ class StockX(BaseScraper):
         "brand",
         "shoe",
         "styleId",
+        "averageDeadstockPrice",
+        "highestBid",
         "lowestAsk",
         "numberOfAsks",
         "salesThisPeriod",
@@ -68,7 +73,11 @@ class StockX(BaseScraper):
         return df[self.important_cols]
 
     def run(self) -> pd.DataFrame:
+        logging.info('Start scraping Stockx')
+
         for brand in self.brands:
+            logging.info('Start scraping brand %s', brand)
+
             params = {"resultsPerPage": 1000, "_search": brand}
 
             df = self.parse(self._get(params=params))

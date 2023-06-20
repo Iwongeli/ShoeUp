@@ -1,25 +1,59 @@
-import json
+import logging
+
+import pandas as pd
 import requests
-from time import sleep
 
-qurey = 'meskie/polbuty'
-result_per_site = 20
-url = f'https://eobuwie.com.pl/t-api/rest/search/eobuwie/v4/search?channel=eobuwie&currency=PLN&locale=pl_PL&limit={result_per_site}&page=1&categories[]={qurey}&select[]=product_active&select[]=product_badge&select[]=manufacturer&select[]=manufacturer_with_collection&select[]=clothes_size&select[]=main_color&select[]=discount&select[]=eco_friendly&select[]=fason&select[]=final_price&select[]=footwear_size&select[]=tegosc&select[]=hot_deal&select[]=images&select[]=model&select[]=nazwa_wyswietlana&select[]=nazwa_wyswietlana_front&select[]=okazja&select[]=price&select[]=producent&select[]=rozmiar_karta_produktu&select[]=product_group_associated&select[]=series_name&select[]=size_type&select[]=index&select[]=action_label&select[]=akcje_marketingowe&select[]=technologie_entity&select[]=url_key&select[]=video_url&select[]=product_color_variants_count&select_locales[]=pl_PL'
-headers = []
-res = {}
+from website_scrapers._base import BaseScraper
 
-r = requests.get(url=url, headers=headers, timeout=3)
 
-products = json.loads(r.text)['products']
-for product in products:
-    model = product['values']['model']['value'].split()
-    if len(model[-1]) < 5 and len(model) > 2:
-        model = model[-2] + ' ' + model[-1]
-    else:
-        model = model[-1]
-    price = product['values']['final_price']['value']['pl_PL']['PLN']['amount']
-    prod_url = 'https://eobuwie.com.pl/p/' + product['values']['url_key']['value']['pl_PL']
-    res[model] = price, prod_url
-    
-    print(model, price, prod_url)
-sleep(5)
+class Eobowie(BaseScraper):
+    url = 'https://eobuwie.com.pl/t-api/rest/search/eobuwie/v4/search'
+
+    def __init__(self) -> None:
+        self.dfs = []
+
+    def run(self) -> pd.DataFrame:
+        logging.info('Start scraping Nike')
+
+        params = {'channel': 'eobuwie',
+                  'currency': 'PLN',
+                  'locale': 'pl_PL',
+                  'limit': 48,
+                  'page': 1,
+                  'categories[]': 'meskie/polbuty/sneakersy',
+                  'select[]': ['model', 'final_price', 'url_key']}
+
+        while True:
+            df = self.parse(self._get(params=params))
+
+            if df.empty is False:
+                self.dfs.append(df)
+                params['page'] += 1
+            else:
+                break
+
+        return pd.concat(self.dfs)
+
+    def parse(self, response: requests.Response) -> pd.DataFrame:
+        def parse_model(value):
+            model_list = value.split()
+            if len(model_list[-1]) < 5 and len(model_list) > 2:
+                return model_list[-2] + '-' + model_list[-1]
+            else:
+                return model_list[-1]
+
+        data = {"id": [], "price": [], "link": []}
+
+        products = response.json()['products']
+        if len(products) > 0:
+            for product in products:
+                data['id'].append(parse_model(
+                    product['values']['model']['value']))
+                data['price'].append(
+                    product['values']['final_price']['value']['pl_PL']['PLN']['amount'])
+                data['link'].append('https://eobuwie.com.pl/p/' +
+                                    product['values']['url_key']['value']['pl_PL'])
+        else:
+            data = {}
+
+        return pd.DataFrame(data)
