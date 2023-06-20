@@ -1,2 +1,7 @@
 # FOLDERS
-/venv
+venv
+.vscode
+__pycache__
+
+# FILES
+*.xlsx

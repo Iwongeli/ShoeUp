@@ -2,6 +2,7 @@ import json
 from time import sleep
 import pandas as pd
 import requests
+import website_scrapers
 
 
 USD_PLN = 4.08
@@ -27,9 +28,9 @@ def total_records(query, page, resultsPerPage):
     r = requests.get(url=url, headers=headers, timeout=3)
 
     output = json.loads(r.text)
-    total_pages = output['Pagination']['total']
+    total_pages = output["Pagination"]["total"]
     return total_pages
-    
+
 
 def search(query, page, resultsPerPage):
     url = f"https://stockx.com/api/browse?_search={query}&page={page}&resultsPerPage={resultsPerPage}"
@@ -53,7 +54,7 @@ def search(query, page, resultsPerPage):
 
     output = json.loads(r.text)
     data = {}
-    
+
     # Add info from market to data dict
     for product in output["Products"]:
         for key, value in product["market"].items():
@@ -84,49 +85,61 @@ def search(query, page, resultsPerPage):
 def transform_records(df):
     res = {}
     counter = 0
-    print('reference_price / revenue / avg_price / attractiveness')
+    print("reference_price / revenue / avg_price / attractiveness")
     for row in df.itertuples():
         # Access data for each column in the current row
         shoe_id = row.styleId
         if len(shoe_id) < 2:
-            print('error: no styleId')
+            print("error: no styleId")
             continue
         counter += 1
-        reference_price = round((row.averageDeadstockPrice + row.highestBid + row.lastSale) / 3 * USD_PLN, 2)
-        revenue = round(reference_price - (reference_price * 0.075 + reference_price * 0.03), 2)
+        reference_price = round(
+            (row.averageDeadstockPrice + row.highestBid + row.lastSale) / 3 * USD_PLN, 2
+        )
+        revenue = round(
+            reference_price - (reference_price * 0.075 + reference_price * 0.03), 2
+        )
         avg_price = round(row.averageDeadstockPrice * USD_PLN, 2)
         attractiveness = 1 * round((1 - row.volatility), 2)
 
         res[shoe_id] = (reference_price, revenue, avg_price, attractiveness)
         print(shoe_id, res[shoe_id])
-        
-    
-    print('TRANSFORM RECORD: SUCCES')
-    print('TOTAL RECORDS:', counter)
+
+    print("TRANSFORM RECORD: SUCCES")
+    print("TOTAL RECORDS:", counter)
+
+
+scrapers = {"nike": website_scrapers.NikeScraper()}
 
 
 def main():
+    print(scrapers)
+    # GETTING MAIN DF FROM STOCKX
+    # stockx = website_scrapers.StockX()
+    # stockx_df = stockx.run()
+
+    # stockx_df.to_excel("output.xlsx", index=False)
+
     # Call the search function with different query values
-    query = "puma"
-    page = 1
-    resultsPerPage = 40
-    dfs = []
-    pages = int(total_records(query, page, resultsPerPage) / resultsPerPage) - 1
-    print('QUERY:', query, '\nRESULTS PER PAGE:', resultsPerPage, '\nTOTAL PAGES:', pages)
-    sleep(5)
+    # query = "puma"
+    # page = 1
+    # resultsPerPage = 40
+    # dfs = []
+    # pages = int(total_records(query, page, resultsPerPage) / resultsPerPage) - 1
+    # print('QUERY:', query, '\nRESULTS PER PAGE:', resultsPerPage, '\nTOTAL PAGES:', pages)
+    # sleep(5)
 
-    for i in range(1, 5):
-        print('PROCESSING PAGE NR:', i)
-        df = search(query, i, resultsPerPage)
-        dfs.append(df)
-        sleep(5)
+    # for i in range(1, 5):
+    #     print('PROCESSING PAGE NR:', i)
+    #     df = search(query, i, resultsPerPage)
+    #     dfs.append(df)
+    #     sleep(5)
 
-    # Concatenate all dataframes into one
-    print('TRANSFORMING RECORDS...')
-    result_df = pd.concat(dfs, ignore_index=True)
-    transform_records(result_df)
+    # # Concatenate all dataframes into one
+    # print('TRANSFORMING RECORDS...')
+    # result_df = pd.concat(dfs, ignore_index=True)
+    # transform_records(result_df)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
