@@ -1,4 +1,5 @@
 import logging
+import multiprocessing.managers
 
 import pandas as pd
 import requests
@@ -72,15 +73,22 @@ class StockX(BaseScraper):
 
         return df[self.important_cols]
 
-    def run(self) -> pd.DataFrame:
-        logging.info('Start scraping Stockx')
+    def run(
+        self, manager_dict: multiprocessing.managers.DictProxy = None
+    ) -> pd.DataFrame:
+        logging.info("Start scraping %s", self.__class__.__name__)
 
         for brand in self.brands:
-            logging.info('Start scraping brand %s', brand)
+            logging.info("Start scraping brand %s", brand)
 
             params = {"resultsPerPage": 1000, "_search": brand}
 
             df = self.parse(self._get(params=params))
             self.dfs.append(df)
 
-        return pd.concat(self.dfs)
+        df_concated = pd.concat(self.dfs)
+
+        if manager_dict is not None:
+            manager_dict[self.__class__.__name__] = df_concated
+
+        return df_concated
