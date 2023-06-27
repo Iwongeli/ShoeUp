@@ -17,6 +17,7 @@ scrapers = (
     website_scrapers.StockX(),
     website_scrapers.Nike(),
     website_scrapers.Eobuwie(),
+    website_scrapers.Adidas(),
 )
 
 
