@@ -1,4 +1,5 @@
 import logging
+import multiprocessing.managers
 
 import pandas as pd
 import requests
@@ -6,7 +7,7 @@ import requests
 from website_scrapers._base import BaseScraper
 
 
-class NikeScraper(BaseScraper):
+class Nike(BaseScraper):
     url = "https://api.nike.com/cic/browse/v2"
 
     def __init__(self) -> None:
@@ -30,8 +31,10 @@ class NikeScraper(BaseScraper):
 
         return pd.DataFrame(data)
 
-    def run(self) -> pd.DataFrame:
-        logging.info('Start scraping Nike')
+    def run(
+        self, manager_dict: multiprocessing.managers.DictProxy = None
+    ) -> pd.DataFrame:
+        logging.info("Start scraping %s", self.__class__.__name__)
 
         params = {
             "queryid": "products",
@@ -56,4 +59,9 @@ class NikeScraper(BaseScraper):
             else:
                 break
 
-        return pd.concat(self.dfs)
+        df_concated = pd.concat(self.dfs)
+
+        if manager_dict is not None:
+            manager_dict[self.__class__.__name__] = df_concated
+
+        return df_concated
