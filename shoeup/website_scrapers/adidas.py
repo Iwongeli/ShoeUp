@@ -38,22 +38,25 @@ class Adidas(BaseScraper):
     ) -> pd.DataFrame:
         logging.info("Start scraping %s", self.__class__.__name__)
 
+        queries = ("mezczyzni-buty", "kobiety-buty")
         params = {
             "experiment": "CORP_BEN",
             "query": "mezczyzni-buty",
         }
         start = 0
 
-        while True:
-            params["start"] = start
+        for query in queries:
+            params["query"] = query
+            while True:
+                params["start"] = start
 
-            df = self.parse(self._get(params=params))
+                df = self.parse(self._get(params=params))
 
-            if df.empty is False:
-                self.dfs.append(df)
-                start += 48
-            else:
-                break
+                if df.empty is False:
+                    self.dfs.append(df)
+                    start += 48
+                else:
+                    break
 
         df_concated = pd.concat(self.dfs)
 
