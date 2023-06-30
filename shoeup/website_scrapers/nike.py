@@ -44,20 +44,26 @@ class Nike(BaseScraper):
             "language": "pl",
             "localizedRangeStr": "{lowestPrice} – {highestPrice}",
         }
+        attribute_ids = (
+            "16633190-45e5-4830-a068-232ac7aea82c,7baf216c-acc6-4452-9e07-39c2ca77ba32",  # women shoes
+            "0f64ecc7-d624-4e91-b171-b83a03dd8550,16633190-45e5-4830-a068-232ac7aea82c",  # men shoes
+        )
+
         anchor = 0
 
-        while True:
-            params[
-                "endpoint"
-            ] = f"/product_feed/rollup_threads/v2?filter=marketplace(PL)&filter=language(pl)&filter=employeePrice(true)&filter=attributeIds(0f64ecc7-d624-4e91-b171-b83a03dd8550,16633190-45e5-4830-a068-232ac7aea82c)&anchor={anchor}&consumerChannelId=d9a5bc42-4b9c-4976-858a-f159cf99c647&count=24"
+        for id in attribute_ids:
+            while True:
+                params[
+                    "endpoint"
+                ] = f"/product_feed/rollup_threads/v2?filter=marketplace(PL)&filter=language(pl)&filter=employeePrice(true)&filter=attributeIds({id})&anchor={anchor}&consumerChannelId=d9a5bc42-4b9c-4976-858a-f159cf99c647&count=24"
 
-            df = self.parse(self._get(params=params))
+                df = self.parse(self._get(params=params))
 
-            if df.empty is False:
-                self.dfs.append(df)
-                anchor += 24
-            else:
-                break
+                if df.empty is False:
+                    self.dfs.append(df)
+                    anchor += 24
+                else:
+                    break
 
         df_concated = pd.concat(self.dfs)
 
