@@ -18,24 +18,42 @@ class Eobuwie(BaseScraper):
     ) -> pd.DataFrame:
         logging.info("Start scraping %s", self.__class__.__name__)
 
+        categories = ("meskie", "damskie")
+
         params = {
             "channel": "eobuwie",
             "currency": "PLN",
             "locale": "pl_PL",
             "limit": 48,
             "page": 1,
-            "categories[]": "meskie/polbuty/sneakersy",
+            "categories[]": "meskie",
             "select[]": ["model", "final_price", "url_key"],
+            "filters[marka][in][]": [
+                "adidas",
+                "adidas_originals",
+                "adidas_performance",
+                "adidas_sportswear",
+                "converse",
+                "jordan",
+                "new_balance",
+                "nike",
+                "puma",
+                "reebok",
+                "reebok_classic",
+                "vans",
+                "asics",
+            ],
         }
+        for category in categories:
+            params["categories[]"] = category
+            while True:
+                df = self.parse(self._get(params=params))
 
-        while True:
-            df = self.parse(self._get(params=params))
-
-            if df.empty is False:
-                self.dfs.append(df)
-                params["page"] += 1
-            else:
-                break
+                if df.empty is False:
+                    self.dfs.append(df)
+                    params["page"] += 1
+                else:
+                    break
 
         df_concated = pd.concat(self.dfs)
 
