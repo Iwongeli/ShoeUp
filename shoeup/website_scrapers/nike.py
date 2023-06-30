@@ -66,6 +66,7 @@ class Nike(BaseScraper):
                     break
 
         df_concated = pd.concat(self.dfs)
+        df_concated["shop"] = self.__class__.__name__
 
         if manager_dict is not None:
             manager_dict[self.__class__.__name__] = df_concated
