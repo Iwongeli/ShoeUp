@@ -4,6 +4,7 @@ from multiprocessing import Process, Manager
 import pandas as pd
 
 import website_scrapers
+from shoes_purchase_analyzer import Analyzer
 
 logging.basicConfig(
     filename="app.log",
@@ -22,33 +23,39 @@ scrapers = (
 
 
 def main():
-    logging.info("Start program")
+    # logging.info("Start program")
 
-    # RUN ALL SCRAPERS TO GET DFS AND CONCAT
-    with Manager() as manager:
-        dfs_manager = manager.dict()
+    # # RUN ALL SCRAPERS TO GET DFS AND CONCAT
+    # with Manager() as manager:
+    #     dfs_manager = manager.dict()
 
-        processes = [Process(target=s.run, args=(dfs_manager,)) for s in scrapers]
+    #     processes = [Process(target=s.run, args=(dfs_manager,)) for s in scrapers]
 
-        for process in processes:
-            process.start()
+    #     for process in processes:
+    #         process.start()
 
-        for process in processes:
-            process.join()
+    #     for process in processes:
+    #         process.join()
 
-        df_stockx = dfs_manager["StockX"]
-        df_scrapers = pd.concat([v for k, v in dfs_manager.items() if k != "StockX"])
+    #     df_stockx = dfs_manager["StockX"]
+    #     df_scrapers = pd.concat([v for k, v in dfs_manager.items() if k != "StockX"])
 
-    logging.info("Saving scrapers df as xlsx")
-    df_scrapers.to_excel("scrapers.xlsx", index=False)
+    # logging.info("Saving scrapers df as xlsx")
+    # df_scrapers.to_excel("scrapers.xlsx", index=False)
 
-    # MERGED DF FROM STOCKX WITH OTHER DFS FOR FURTHER ANALYZE
-    logging.info("Start merging stockx df with scrapers df")
-    df_merged = df_stockx.merge(
-        df_scrapers, how="left", left_on="styleId", right_on="id"
-    )
-    logging.info("Saving merged df as xlsx")
-    df_merged.to_excel("merged.xlsx", index=False)
+    # # MERGED DF FROM STOCKX WITH OTHER DFS FOR FURTHER ANALYZE
+    # logging.info("Start merging stockx df with scrapers df")
+    # df_merged = df_stockx.merge(
+    #     df_scrapers, how="left", left_on="styleId", right_on="id"
+    # )
+    # logging.info("Saving merged df as xlsx")
+    # df_merged.to_excel("merged.xlsx", index=False)
+
+    df_merged = pd.read_excel('merged.xlsx')
+    analyzer = Analyzer(df_merged)
+    df_analyzed = analyzer.analyze()
+
+    df_analyzed.to_excel("x.xlsx", index=False)
 
 
 if __name__ == "__main__":
