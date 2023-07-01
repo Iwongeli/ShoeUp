@@ -4,6 +4,7 @@ from multiprocessing import Process, Manager
 import pandas as pd
 
 import website_scrapers
+from shoes_purchase_analysis import shoes_purchase_analysis
 
 logging.basicConfig(
     filename="app.log",
@@ -49,6 +50,8 @@ def main():
     )
     logging.info("Saving merged df as xlsx")
     df_merged.to_excel("merged.xlsx", index=False)
+
+    df_analyzed = shoes_purchase_analysis(df_merged)
 
 
 if __name__ == "__main__":
