@@ -8,19 +8,12 @@ from website_scrapers._base import BaseScraper
 
 
 class Eobuwie(BaseScraper):
-    url = "https://eobuwie.com.pl/t-api/rest/search/eobuwie/v4/search"
-
     def __init__(self) -> None:
+        super().__init__()
+        self.url = "https://eobuwie.com.pl/t-api/rest/search/eobuwie/v4/search"
         self.dfs = []
-
-    def run(
-        self, manager_dict: multiprocessing.managers.DictProxy = None
-    ) -> pd.DataFrame:
-        logging.info("Start scraping %s", self.__class__.__name__)
-
-        categories = ("meskie", "damskie")
-
-        params = {
+        self.categories = ("meskie", "damskie")
+        self.params = {
             "channel": "eobuwie",
             "currency": "PLN",
             "locale": "pl_PL",
@@ -44,14 +37,20 @@ class Eobuwie(BaseScraper):
                 "asics",
             ],
         }
-        for category in categories:
-            params["categories[]"] = category
+
+    def run(
+        self, manager_dict: multiprocessing.managers.DictProxy = None
+    ) -> pd.DataFrame:
+        logging.info("Start scraping %s", self.__class__.__name__)
+
+        for category in self.categories:
+            self.params["categories[]"] = category
             while True:
-                df = self.parse(self._get(params=params))
+                df = self.parse(self._get(params=self.params))
 
                 if df.empty is False:
                     self.dfs.append(df)
-                    params["page"] += 1
+                    self.params["page"] += 1
                 else:
                     break
 
@@ -71,20 +70,21 @@ class Eobuwie(BaseScraper):
             else:
                 return model_list[-1]
 
+        products = response.json()["products"]
+
+        if len(products) <= 0:
+            return pd.DataFrame()
+
         data = {"id": [], "price": [], "link": []}
 
-        products = response.json()["products"]
-        if len(products) > 0:
-            for product in products:
-                data["id"].append(parse_model(product["values"]["model"]["value"]))
-                data["price"].append(
-                    product["values"]["final_price"]["value"]["pl_PL"]["PLN"]["amount"]
-                )
-                data["link"].append(
-                    "https://eobuwie.com.pl/p/"
-                    + product["values"]["url_key"]["value"]["pl_PL"]
-                )
-        else:
-            data = {}
+        for product in products:
+            data["id"].append(parse_model(product["values"]["model"]["value"]))
+            data["price"].append(
+                product["values"]["final_price"]["value"]["pl_PL"]["PLN"]["amount"]
+            )
+            data["link"].append(
+                "https://eobuwie.com.pl/p/"
+                + product["values"]["url_key"]["value"]["pl_PL"]
+            )
 
         return pd.DataFrame(data)

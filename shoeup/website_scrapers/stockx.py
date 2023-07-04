@@ -8,40 +8,40 @@ from website_scrapers._base import BaseScraper
 
 
 class StockX(BaseScraper):
-    url = "https://stockx.com/api/browse"
-    brands = [
-        "adidas",
-        "Nike",
-        "Jordan",
-        "New Balance",
-        "Vans",
-        "Reebok",
-        "Converse",
-        "Puma",
-        "ASICS",
-    ]
-    important_cols = [
-        "brand",
-        "shoe",
-        "styleId",
-        "averageDeadstockPrice",
-        "highestBid",
-        "lowestAsk",
-        "numberOfAsks",
-        "salesThisPeriod",
-        "salesLastPeriod",
-        "numberOfBids",
-        "deadstockRangeLow",
-        "deadstockRangeHigh",
-        "volatility",
-        "deadstockSold",
-        "lastSale",
-        "salesLast72Hours",
-        "deadstockSoldRank",
-        "averageDeadstockPriceRank",
-    ]
-
     def __init__(self) -> None:
+        super().__init__()
+        self.url = "https://stockx.com/api/browse"
+        self.brands = [
+            "adidas",
+            "Nike",
+            "Jordan",
+            "New Balance",
+            "Vans",
+            "Reebok",
+            "Converse",
+            "Puma",
+            "ASICS",
+        ]
+        self.important_cols = [
+            "brand",
+            "shoe",
+            "styleId",
+            "averageDeadstockPrice",
+            "highestBid",
+            "lowestAsk",
+            "numberOfAsks",
+            "salesThisPeriod",
+            "salesLastPeriod",
+            "numberOfBids",
+            "deadstockRangeLow",
+            "deadstockRangeHigh",
+            "volatility",
+            "deadstockSold",
+            "lastSale",
+            "salesLast72Hours",
+            "deadstockSoldRank",
+            "averageDeadstockPriceRank",
+        ]
         self.dfs = []
 
     def parse(self, response: requests.Response) -> pd.DataFrame:
@@ -50,19 +50,11 @@ class StockX(BaseScraper):
         products = response.json()["Products"]
 
         for product in products:
-            for key, value in product["market"].items():
-                if key not in data:
-                    data[key] = []
-                data[key].append(value)
+            product_items = product.pop("market", {})
+            product_items.update(product)
 
-        for product in products:
-            if product["market"]:
-                product.pop("market")
-
-            for key, value in product.items():
-                if key not in data:
-                    data[key] = []
-                data[key].append(value)
+            for key, value in product_items.items():
+                data.setdefault(key, []).append(value)
 
         max_length = max(len(lst) for lst in data.values())
         for key in data:
