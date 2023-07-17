@@ -4,7 +4,7 @@ import requests
 import json
 from time import sleep
 
-from _base import BaseScraper
+from website_scrapers._base import BaseScraper
 
 
 class Reebok(BaseScraper):
