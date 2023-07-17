@@ -73,7 +73,7 @@ class StockX(BaseScraper):
         for brand in self.brands:
             logging.info("Start scraping brand %s", brand)
 
-            params = {"resultsPerPage": 50, "_search": brand}
+            params = {"resultsPerPage": 1000, "_search": brand}
 
             df = self.parse(self._get(params=params))
             self.dfs.append(df)
