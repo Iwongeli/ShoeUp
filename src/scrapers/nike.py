@@ -1,22 +1,26 @@
+"""Nike scraper."""
 import logging
 import multiprocessing.managers
 
 import pandas as pd
 import requests
 
-from website_scrapers._base import BaseScraper
+from ._base_scraper import BaseScraper
 
 
 class Nike(BaseScraper):
+    """Nike scraper."""
+
     def __init__(self) -> None:
+        """Init."""
         super().__init__()
         self.url = "https://api.nike.com/cic/browse/v2"
-        self.dfs = []
+        self.dfs: list[pd.DataFrame] = []
         self.params = {
             "queryid": "products",
             "anonymousId": "60DE7E4BCCCD1D7470D10F44D33348F0",
             "country": "pl",
-            "endpoint": "/product_feed/rollup_threads/v2?filter=marketplace(PL)&filter=language(pl)&filter=employeePrice(true)&filter=attributeIds(0f64ecc7-d624-4e91-b171-b83a03dd8550,16633190-45e5-4830-a068-232ac7aea82c)&anchor=0&consumerChannelId=d9a5bc42-4b9c-4976-858a-f159cf99c647&count=24",
+            "endpoint": "/product_feed/rollup_threads/v2?filter=marketplace(PL)&filter=language(pl)&filter=employeePrice(true)&filter=attributeIds(0f64ecc7-d624-4e91-b171-b83a03dd8550,16633190-45e5-4830-a068-232ac7aea82c)&anchor=0&consumerChannelId=d9a5bc42-4b9c-4976-858a-f159cf99c647&count=24",  # noqa: E501
             "language": "pl",
             "localizedRangeStr": "{lowestPrice} – {highestPrice}",
         }
@@ -48,10 +52,10 @@ class Nike(BaseScraper):
 
         anchor = 0
 
-        for id in self.attribute_ids:
+        for attribute in self.attribute_ids:
             self.params[
                 "endpoint"
-            ] = f"/product_feed/rollup_threads/v2?filter=marketplace(PL)&filter=language(pl)&filter=employeePrice(true)&filter=attributeIds({id})&anchor={anchor}&consumerChannelId=d9a5bc42-4b9c-4976-858a-f159cf99c647&count=24"
+            ] = f"/product_feed/rollup_threads/v2?filter=marketplace(PL)&filter=language(pl)&filter=employeePrice(true)&filter=attributeIds({attribute})&anchor={anchor}&consumerChannelId=d9a5bc42-4b9c-4976-858a-f159cf99c647&count=24"  # noqa: E501
 
             while True:
                 df = self.parse(self._get(params=self.params))

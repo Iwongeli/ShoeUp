@@ -1,14 +1,18 @@
+"""Eobuwie scraper."""
 import logging
 import multiprocessing.managers
 
 import pandas as pd
 import requests
 
-from website_scrapers._base import BaseScraper
+from ._base_scraper import BaseScraper
 
 
 class Eobuwie(BaseScraper):
+    """Eobuwie scraper."""
+
     def __init__(self) -> None:
+        """Init."""
         super().__init__()
         self.url = "https://eobuwie.com.pl/t-api/rest/search/eobuwie/v4/search"
         self.dfs = []
@@ -63,12 +67,13 @@ class Eobuwie(BaseScraper):
         return df_concated
 
     def parse(self, response: requests.Response) -> pd.DataFrame:
+        """Parsing."""
+
         def parse_model(value):
             model_list = value.split()
             if len(model_list[-1]) < 5 and len(model_list) > 2:
                 return model_list[-2] + "-" + model_list[-1]
-            else:
-                return model_list[-1]
+            return model_list[-1]
 
         products = response.json()["products"]
 

@@ -1,52 +1,75 @@
-# ShoeUp
+# ShoeX - Sneaker Profit Analytics
 
-ShoeUp is a web scraping and analysis project focused on various shoe retail platforms. It scrapes data about shoes and analyzes prices to help you find the best deals. 
+## Description
 
-## Scraped Websites
+ShoeX is a Python application designed to scrape sneaker data from various online retailers. The scraped data is transformed into a Pandas DataFrame, merged, and then analyzed to identify which sneakers are the most profitable to sell on StockX.
 
-The list of websites that the ShoeUp is currently scraping includes:
+### Installation
 
-- [x] [StockX](https://stockx.com/)
-- [x] [Adidas](https://www.adidas.pl/)
-- [x] [Nike](https://www.nike.com/pl/)
-- [x] [Eobuwie](https://eobuwie.com.pl/)
-- [ ] [Miniramp](https://miniramp.pl/)
-- [ ] [Snipes](https://www.snipes.pl/)
-- [ ] [Adrenaline](https://adrenaline.pl/)
-- [ ] [Nbsklep](https://nbsklep.pl/)
-- [ ] [Zalando](https://www.zalando.pl/)
-- [ ] [E-megasport](https://e-megasport.com/)
-- [ ] [Zalando Lounge](https://www.zalando-lounge.pl/#/)
-- [ ] [Vans](https://www.vans.pl/)
-- [ ] [Converse](https://www.converse.pl/)
-- [ ] [About You](https://www.aboutyou.pl/twoj-sklep)
-- [ ] [Boozt](https://www.boozt.com/pl/pl)
-- [ ] [Reebok](https://www.reebok.eu/en-pl/)
+Install the required Python packages using pip:
 
-Each checkmark indicates that the scraper for that site is currently functional.
+```bash
+pip install -r requirements.txt
+```
 
-## Overview
+## Code Quality Checks
 
-Each website is handled by a separate scraper module that inherits from the base scraper class. For example, `StockX`, `Nike`, `Eobuwie`, and `Adidas` are handled by their respective classes. These classes are responsible for sending HTTP requests to the websites, handling the responses, and extracting the necessary data.
+This project uses several code quality checks including `black`, `isort`, `flake8`, `pylint`, and `mypy`. You can run all these checks using the Bash script included in the repository:
 
-The data extracted by the scrapers are stored in pandas DataFrame objects. The extracted data include unique identifiers for the products, their prices, and links to their respective pages on the websites.
+```bash
+./run_checks.sh
+```
 
-The scrapers are managed by a `main` module which initiates each scraper as a separate process, allowing them to run concurrently. The resulting DataFrames from each scraper are then merged and saved as .xlsx files for further processing.
+## Usage
 
-An `Analyzer` class is used to analyze the merged data. It converts prices from USD to PLN (Polish Zloty), computes the final price after various taxes and fees, and highlights products with potential profitable price differences greater than 50, with volatility less than 1, and with at least one bid.
+1. **Clone the Repo**: 
+    ```bash
+    git clone https://github.com/yourusername/ShoeX.git
+    ```
+  
+2. **Navigate to the Directory**:
+    ```bash
+    cd ShoeX
+    ```
 
-## Getting Started
+3. **Run the Scraper**:
+    ```bash
+    python src/main.py
+    ```
+   This will generate a DataFrame with the scraped sneaker data.
 
-1. Clone the repository.
-2. Install the required dependencies listed in the `requirements.txt` file.
-3. Run the `main.py` file to start scraping and analysis.
+### Main Script Structure
 
-The program will log its progress and any issues encountered to `app.log`. The results of the scraping and analysis will be saved as .xlsx files.
+The main script (`main.py`) performs several tasks:
 
-## Note
+- Configures logging to `app.log`.
+- Uses multiprocessing to run various scrapers concurrently.
+- Merges the data into a single DataFrame.
+- Analyzes the data to identify profitable sneakers for selling on StockX.
 
-Remember that web scraping should be performed in compliance with the terms and conditions of the websites being scraped, and with respect to their robots.txt files.
+#### Logging Configuration
 
-## Future Improvements
+The logging is configured as follows:
 
-Work is ongoing to implement scraping for more websites as listed above. Additionally, improvements are planned for better error handling, more efficient data storage, and more detailed data analysis.
+- Filename: `app.log`
+- Format: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`
+- Date Format: `%d-%b-%y %H:%M:%S`
+
+## Data Analysis
+
+The `Analyzer` class is responsible for analyzing the merged DataFrame. It performs several key operations:
+
+- **Currency Conversion**: It converts sneaker prices from USD to PLN using the current exchange rate from the NBP API, with a fallback to a hardcoded rate.
+  
+- **Price Formatting**: The class formats necessary columns and calculates a `finalPriceAfterTaxes` that takes into account various fees and taxes.
+  
+- **Profit Analysis**: Finally, the `Analyzer` filters the DataFrame to only include sneakers that have a significant price difference (`priceDiff > 50`), have some market demand (`numberOfBids > 0`), and are less volatile (`volatility < 1`).
+
+### Configuration in Analyzer
+
+- Transaction Fee: 9% (`0.09`)
+- Payment Processing Fee: 3% (`0.03`)
+- USD to PLN conversion: Fetched from NBP API or defaults to `4.0`
+- Delivery Cost: USD 5.45
+
+To understand more about how the analysis is performed, you can refer to the `Analyzer` class in the `shoes_purchase_analyzer.py` file.

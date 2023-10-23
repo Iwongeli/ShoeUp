@@ -1,20 +1,23 @@
+"""Adidas scraper."""
 import logging
 import multiprocessing.managers
 
 import pandas as pd
 import requests
 
-from website_scrapers._base import BaseScraper
+from ._base_scraper import BaseScraper
 
 
 class Adidas(BaseScraper):
+    """Adidas scraper."""
+
     def __init__(self) -> None:
         super().__init__()
         self.url = "https://www.adidas.pl/api/plp/content-engine"
         self.dfs = []
         self.headers[
             "user-agent"
-        ] = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
+        ] = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"  # noqa: E501
         del self.headers["accept-language"]
         self.queries = ("mezczyzni-buty", "kobiety-buty")
         self.params = {

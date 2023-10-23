@@ -1,29 +1,23 @@
+"""Main shoex file."""
 import logging
-from multiprocessing import Process, Manager
-import multiprocessing.managers
+import multiprocessing
+from multiprocessing import Manager, Process
 
 import pandas as pd
 
-import website_scrapers
+from scrapers.adidas import Adidas
+from scrapers.eobuwie import Eobuwie
+from scrapers.nike import Nike
+from scrapers.stockx import StockX
 from shoes_purchase_analyzer import Analyzer
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_DATEFMT = "%d-%b-%y %H:%M:%S"
 LOG_FILENAME = "app.log"
 
-OUTPUT_FILENAME_SCRAPERS = "scrapers.xlsx"
-OUTPUT_FILENAME_MERGED = "merged.xlsx"
-OUTPUT_FILENAME_ANALYZED = "x.xlsx"
 
-scrapers = (
-    website_scrapers.StockX(),
-    website_scrapers.Nike(),
-    website_scrapers.Eobuwie(),
-    website_scrapers.Adidas(),
-)
-
-
-def configure_logging():
+def configure_logging() -> None:
+    """Configure the logger."""
     logging.basicConfig(
         filename=LOG_FILENAME,
         filemode="w",
@@ -33,8 +27,21 @@ def configure_logging():
     )
 
 
-def run_scrapers(manager: multiprocessing.managers.SyncManager):
+selenium_scrapers = StockX()
+
+scrapers = (
+    Nike(),
+    Eobuwie(),
+    Adidas(),
+)
+
+
+def run_scrapers(manager: multiprocessing.managers.SyncManager) -> tuple:
+    """Run all scrapers and store the data in the manager."""
     dfs_manager = manager.dict()
+
+    dfs_manager["StockX"] = selenium_scrapers.run()
+
     processes = [Process(target=s.run, args=(dfs_manager,)) for s in scrapers]
 
     for process in processes:
@@ -45,30 +52,29 @@ def run_scrapers(manager: multiprocessing.managers.SyncManager):
     df_stockx = dfs_manager["StockX"]
     df_scrapers = pd.concat([v for k, v in dfs_manager.items() if k != "StockX"])
 
-    return df_stockx, df_scrapers
+    return (df_stockx, df_scrapers)
 
 
-def merge_dataframes(df_stockx, df_scrapers):
+def merge_dataframes(
+    df_stockx: pd.DataFrame, df_scrapers: pd.DataFrame
+) -> pd.DataFrame:
+    """Merging dfs."""
     return df_stockx.merge(df_scrapers, how="left", left_on="styleId", right_on="id")
 
 
-def main():
+def main() -> None:
+    """Main function."""
     configure_logging()
     logging.info("Start program")
 
     with Manager() as manager:
         df_stockx, df_scrapers = run_scrapers(manager)
-        logging.info("Saving scrapers df as xlsx")
-        df_scrapers.to_excel(OUTPUT_FILENAME_SCRAPERS, index=False)
 
-        logging.info("Start merging stockx df with scrapers df")
         df_merged = merge_dataframes(df_stockx, df_scrapers)
-        logging.info("Saving merged df as xlsx")
-        df_merged.to_excel(OUTPUT_FILENAME_MERGED, index=False)
 
         analyzer = Analyzer(df_merged)
         df_analyzed = analyzer.analyze()
-        df_analyzed.to_excel(OUTPUT_FILENAME_ANALYZED, index=False)
+        df_analyzed.to_excel("result.xlsx", index=False)
 
 
 if __name__ == "__main__":
