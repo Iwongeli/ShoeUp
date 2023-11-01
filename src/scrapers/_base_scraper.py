@@ -2,8 +2,10 @@
 
 import abc
 import logging
-from typing import Optional
+from pathlib import Path
+from typing import Any
 
+import pandas as pd
 import requests
 
 
@@ -26,29 +28,39 @@ class BaseScraper(abc.ABC):
         self.url: str = ""
 
     @abc.abstractmethod
-    def run(self) -> None:
+    def run(self) -> Any:
         """Abstract method for running the scraper."""
         pass
 
     @abc.abstractmethod
-    def parse(self) -> None:
+    def parse(self) -> Any:
         """Abstract method for parsing the data."""
         pass
 
-    def _get(self, params: dict) -> Optional[requests.Response]:
+    @staticmethod
+    def save_file(df: pd.DataFrame, file_name: str) -> None:
+        """Saving files."""
+        xlsx_results_path = Path("xlsx_results")
+        logging.info(f"Saving file: {file_name}")
+
+        saving_path = Path(xlsx_results_path / f"{file_name}.xlsx")
+        df.to_excel(saving_path, index=False)
+
+    def _get(self, params: dict) -> requests.Response:
         """Perform GET request and handle exceptions."""
         try:
-            r = requests.get(
-                self.url, params=params, headers=self.headers, timeout=10
-            )  # Added timeout
+            r = requests.get(self.url, params=params, headers=self.headers, timeout=10)
             r.raise_for_status()
             return r
         except requests.exceptions.HTTPError as errh:
             logging.error("HTTP Error: %s", errh)
+            raise requests.exceptions.HTTPError
         except requests.exceptions.ConnectionError as errc:
             logging.error("Error Connecting: %s", errc)
+            raise requests.exceptions.ConnectionError
         except requests.exceptions.Timeout as errt:
             logging.error("Timeout Error: %s", errt)
+            raise requests.exceptions.Timeout
         except requests.exceptions.RequestException as err:
             logging.error("Unknown Error: %s", err)
-        return None  # Return None if there's an exception
+            raise requests.exceptions.RequestException
